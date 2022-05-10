@@ -4,7 +4,7 @@ let mbUrl = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
 let map = {}
 let layerControl = {}
 let allData = {}
-const zoom = 5
+const zoom = 8
 const center = [-12.002221182006943, -77.00519605326208]
 
 const visualizacionMapa = {
@@ -37,15 +37,74 @@ const visualizacionMapa = {
   loadProvincias() {
     var jsonTest = new L.GeoJSON.AJAX(["data/provincias.geojson"],{onEachFeature:this.showProvinciaInfo}).addTo(map)
   },
-  showProvinciaInfo(f,l) {
-    l.on({
-      click: () => {
-        console.log(_.groupBy(allData, 'PROVINCENAME'))
-      }
-    })
-  },
   createProductList() {
     return _.groupBy(allData, 'PROVINCENAME')
+  },
+
+  showProvinciaInfo(provincia,layer) {
+    const $this = this
+    layer.on({
+      click: () => {
+
+        const dataProvincia = _.filter(allData, ['PROVINCENAME', provincia.properties.NOMBPROV])
+
+        const cantidadProductos = _.map(_.groupBy(dataProvincia, 'SKU_NAME'), provincia => {
+          return provincia.length
+        })
+
+        const totalProductos = _.map(_.groupBy(dataProvincia, 'SKU_NAME'), provincia => {
+          return _.sumBy(provincia, 'TOTALPAID')
+        })
+
+        Highcharts.chart('totalProductos', {
+          chart: {
+              type: 'column'
+          },
+          title: {
+              text: 'Reporte de ventas'
+          },
+          subtitle: {
+              text: ''
+          },
+          xAxis: {
+            categories: _.uniq(_.map(dataProvincia, 'SKU_NAME')),
+            crosshair: true
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: 'Cantidad / Total S/.'
+            }
+        },
+        tooltip: {
+            headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+            pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                '<td style="padding:0"><b>{point.y:.1f}</b></td></tr>',
+            footerFormat: '</table>',
+            shared: true,
+            useHTML: true
+        },
+        plotOptions: {
+            column: {
+              pointPadding: 0.2,
+              borderWidth: 0
+            }
+        },
+        series: [
+          {
+            name: 'Cantidad',
+            data: cantidadProductos
+          },
+          {
+            name: 'Total S/.',
+            data: totalProductos
+        }]
+      })
+
+
+
+      }
+    })
   }
 }
 

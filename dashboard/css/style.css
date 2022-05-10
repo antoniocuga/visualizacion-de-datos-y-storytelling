@@ -5,7 +5,7 @@ html, body {
 }
 
 .leaflet-container {
-  height: 100vh;
+  height: 55vh;
   width: 100%;
   max-width: 100%;
   max-height: 100%;
