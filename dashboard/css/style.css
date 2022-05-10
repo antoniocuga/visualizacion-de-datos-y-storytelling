@@ -23,7 +23,8 @@ html, body {
   position: absolute;
   width: 100%;
   max-width: 320px;
-  height: 15vh;
+  overflow-y: scroll;
+  height: 55vh;
   top: 0;
   right: 0;
   background-color: rgba(255, 255, 255, 0.712);
