@@ -85,13 +85,31 @@
           <div class="map-wrapper">
             <div class="map-container" id="map"></div>
             <div class="map-filters">
-              <ul class="product-list">
-              </ul>
+
+              <div class="dropdown">
+                <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                  Lista de productos
+                </a>
+              
+                <ul class="product-list dropdown-menu" aria-labelledby="dropdownMenuLink">
+                </ul>
+              </div>
+
             </div>
           </div>
 
           <div class="charts-wrapper">
             <div class="productos-chart" id="totalProductos">
+            </div>
+          </div>
+          
+          <div class="charts-wrapper">
+            <div class="productos-pie" id="totalProductosPie">
+            </div>
+          </div>
+
+          <div class="charts-wrapper">
+            <div class="productos-histogram" id="histogramProductos">
             </div>
           </div>
 

@@ -10,8 +10,8 @@ const center = [-12.002221182006943, -77.00519605326208]
 const visualizacionMapa = {
   init() {
     this.loadData()
-    this.renderMap()
-    this.loadProvincias()
+    // this.renderMap()
+    // this.loadProvincias()
 
     setTimeout(() => {
       visualizacionMapa.createListProductos()
@@ -46,38 +46,36 @@ const visualizacionMapa = {
     let list  = document.querySelector('.product-list')
 
     let listContent = ``
+
     _.map(_.groupBy(allData, 'PROVINCENAME'), (producto, provincia) => {
       const productoItem = {
         "provincia": provincia,
         "cantidad": provincia.length
       }
-      // const item = document.createElement('li')
-      // item.innerHTML = `${productoItem.provincia} (${productoItem.cantidad})`
-      // item.onclick = () => {
-      //   cargarGrafico(productoItem.provincia)
-      // }
-      // list.append(item)
 
-      listContent += `<li onclick="visualizacionMapa.cargarGrafico('${productoItem.provincia}')">${productoItem.provincia} (${productoItem.cantidad})</li>`
+      listContent += `<li><a class="dropdown-item" href="#" onclick="visualizacionMapa.cargarGrafico('${productoItem.provincia}')">${productoItem.provincia} (${productoItem.cantidad})</a></li>`
     })
 
     list.innerHTML = listContent
 
-  },
-  createProductList() {
-    return _.groupBy(allData, 'PROVINCENAME')
   },
   showProvinciaInfo(provincia,layer) {
     const $this = this
     layer.on({
       click: () => {
 
-        visualizacionMapa.cargarGrafico(provincia.properties.NOMBPROV)
+        visualizacionMapa.cargarBarras(provincia.properties.NOMBPROV)
+        visualizacionMapa.cargarPie(provincia.properties.NOMBPROV)
 
       }
     })
   },
-  cargarGrafico(nombreProvincia) {
+  cargarGrafico(provincia) {
+    visualizacionMapa.cargarBarras(provincia)
+    visualizacionMapa.cargarPie(provincia)
+    visualizacionMapa.cargarHistogram(provincia)
+  },
+  cargarBarras(nombreProvincia) {
 
     const dataProvincia = _.filter(allData, ['PROVINCENAME', nombreProvincia])
 
@@ -89,19 +87,19 @@ const visualizacionMapa = {
       return _.sumBy(provincia, 'TOTALPAID')
     })
 
-      Highcharts.chart('totalProductos', {
-        chart: {
-            type: 'column'
-        },
-        title: {
-            text: 'Reporte de ventas'
-        },
-        subtitle: {
-            text: ''
-        },
-        xAxis: {
-          categories: _.uniq(_.map(dataProvincia, 'SKU_NAME')),
-          crosshair: true
+    Highcharts.chart('totalProductos', {
+      chart: {
+          type: 'column'
+      },
+      title: {
+          text: 'Reporte de ventas'
+      },
+      subtitle: {
+          text: ''
+      },
+      xAxis: {
+        categories: _.uniq(_.map(dataProvincia, 'SKU_NAME')),
+        crosshair: true
       },
       yAxis: {
           min: 0,
@@ -134,6 +132,110 @@ const visualizacionMapa = {
       }]
     })
 
+  },
+  cargarPie(nombreProvincia) {
+
+    const dataProvincia = _.filter(allData, ['PROVINCENAME', nombreProvincia])
+
+    const cantidadProductos = _.map(_.groupBy(dataProvincia, 'SKU_NAME'), (items, producto) => {
+      return {
+        name: producto,
+        y: _.sumBy(items, 'TOTALPAID'),
+        sliced: true,
+        selected: true
+      }
+    })
+
+    Highcharts.chart('totalProductosPie', {
+      chart: {
+          plotBackgroundColor: null,
+          plotBorderWidth: null,
+          plotShadow: false,
+          type: 'pie'
+      },
+      title: {
+          text: 'Total de ventas por productoist'
+      },
+      tooltip: {
+          pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+      },
+      accessibility: {
+          point: {
+              valueSuffix: '%'
+          }
+      },
+      plotOptions: {
+          pie: {
+              allowPointSelect: true,
+              cursor: 'pointer',
+              dataLabels: {
+                  enabled: true,
+                  format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+              }
+          }
+      },
+      series: [{
+        name: 'Productos vendidos',
+        colorByPoint: true,
+        data: cantidadProductos
+      }]
+  });
+
+  },
+  cargarHistogram(nombreProvincia) {
+
+    const dataProvincia = _.filter(allData, ['PROVINCENAME', nombreProvincia])
+
+    const meses = _.uniq(_.map(dataProvincia, 'MONTHNUM'))
+    
+    const productosMes = _.map(_.groupBy(dataProvincia, 'MONTHNUM'), (items) => {
+      return items.length
+    })
+
+
+    Highcharts.chart('histogramProductos', {
+      chart: {
+        type: 'column'
+      },
+      title: {
+        text: 'Ventas de productos por mes'
+      },
+      subtitle: {
+        text: ''
+      },
+      xAxis: {
+        categories: (meses).sort(),
+        crosshair: true
+      },
+      yAxis: {
+        min: 0,
+        title: {
+          text: ''
+        }
+      },
+      tooltip: {
+        headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+        pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+          '<td style="padding:0"><b>{point.y:.1f} productos vendidos</b></td></tr>',
+        footerFormat: '</table>',
+        shared: true,
+        useHTML: true
+      },
+      plotOptions: {
+        column: {
+          pointPadding: 0,
+          borderWidth: 0,
+          groupPadding: 0,
+          shadow: false
+        }
+      },
+      series: [{
+        name: 'Data',
+        data: productosMes
+    
+      }]
+    });
+    
   }
 }
 
