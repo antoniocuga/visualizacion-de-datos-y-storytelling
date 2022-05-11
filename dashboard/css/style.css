@@ -19,10 +19,9 @@ html, body {
   position: relative;
 }
 
-.map-wrapper .map-filters{
-  width: 100%;
-}
 
 .map-wrapper .map-filters .product-list {
   width: 100%;
+  max-height: 55vh;
+  overflow-y: scroll;
 }

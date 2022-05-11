@@ -16,7 +16,7 @@ const visualizacionMapa = {
     setTimeout(() => {
       visualizacionMapa.createListProductos()
       this.loadProvincias()
-    }, 1500)
+    }, 2500)
   },
   initBank() {
     this.loadBank()
@@ -34,13 +34,25 @@ const visualizacionMapa = {
       layers: [streets, markers]
     })
   },
-  loadData() {
+  loadDataGoogleDocs() {
     var xmlhttp = new XMLHttpRequest()
     xmlhttp.open('GET', 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRly4USiFyMGeEYL1wypZub6bqQGNrdvrfpMW8mf-Mi0R4g5uctN29a4J6Ue34EcZsgs9kdf5zzeZxh/pub?gid=1879248939&single=true&output=csv', true)
     xmlhttp.onreadystatechange = () => {
       if (xmlhttp.readyState == 4) {
         if(xmlhttp.status == 200) {
           allData = visualizacionMapa.parseData(xmlhttp.responseText)
+        }
+      }
+    }
+    xmlhttp.send(null)
+  },
+  loadData() {
+    var xmlhttp = new XMLHttpRequest()
+    xmlhttp.open('GET', 'data/ventas.json', true)
+    xmlhttp.onreadystatechange = () => {
+      if (xmlhttp.readyState == 4) {
+        if(xmlhttp.status == 200) {
+          allData = JSON.parse(xmlhttp.responseText)
         }
       }
     }
@@ -324,6 +336,13 @@ const visualizacionMapa = {
     visualizacionMapa.cargarBarras(provincia)
     visualizacionMapa.cargarPie(provincia)
     visualizacionMapa.cargarHistogram(provincia)
+
+    const provinciaData = _.find(allData, ['PROVINCENAME', provincia])
+
+
+    map.setView([provinciaData.lat, provinciaData.lon], 9)
+
+
   },
   cargarBarras(nombreProvincia) {
 
