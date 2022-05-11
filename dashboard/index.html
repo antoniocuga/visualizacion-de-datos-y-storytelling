@@ -83,7 +83,6 @@
           <h5></h5>
           
           <div class="map-wrapper">
-            <div class="map-container" id="map"></div>
             <div class="map-filters">
 
               <div class="dropdown">
@@ -96,23 +95,31 @@
               </div>
 
             </div>
+            
+            <div class="map-container" id="map"></div>
+            
           </div>
 
-          <div class="charts-wrapper">
-            <div class="productos-chart" id="totalProductos">
+          <div class="row">
+            <div class="col-6">
+              <div class="charts-wrapper">
+                <div class="productos-chart" id="totalProductos">
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="charts-wrapper">
+                <div class="productos-pie" id="totalProductosPie">
+                </div>
+              </div>    
+            </div>
+            <div class="col-6">
+              <div class="charts-wrapper">
+                <div class="productos-histogram" id="histogramProductos">
+                </div>
+              </div>
             </div>
           </div>
-          
-          <div class="charts-wrapper">
-            <div class="productos-pie" id="totalProductosPie">
-            </div>
-          </div>
-
-          <div class="charts-wrapper">
-            <div class="productos-histogram" id="histogramProductos">
-            </div>
-          </div>
-
         </main>
       </div>
     </div>

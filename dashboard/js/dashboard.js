@@ -28,15 +28,31 @@ const visualizacionMapa = {
   },
   loadData() {
     var xmlhttp = new XMLHttpRequest()
-    xmlhttp.open('GET', 'data/ventas.json', true)
+    xmlhttp.open('GET', 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRly4USiFyMGeEYL1wypZub6bqQGNrdvrfpMW8mf-Mi0R4g5uctN29a4J6Ue34EcZsgs9kdf5zzeZxh/pub?gid=1879248939&single=true&output=csv', true)
     xmlhttp.onreadystatechange = () => {
       if (xmlhttp.readyState == 4) {
         if(xmlhttp.status == 200) {
-          allData = JSON.parse(xmlhttp.responseText)
+          allData = visualizacionMapa.parseData(xmlhttp.responseText)
         }
       }
     }
     xmlhttp.send(null)
+  },
+  parseData(csv) {
+    //recipe from http://techslides.com/convert-csv-to-json-in-javascript
+    var lines=csv.split("\n")
+    var result = []
+    var headers=lines[0].split(",")
+    for(var i=1;i<lines.length;i++){
+      var obj = {}
+      var currentline=lines[i].split(",")
+      for(var j=0;j<headers.length;j++){
+        obj[headers[j]] = currentline[j]
+      }
+      result.push(obj)
+    }
+
+    return result
   },
   loadProvincias() {
     var jsonTest = new L.GeoJSON.AJAX(["data/provincias.geojson"],{onEachFeature:this.showProvinciaInfo}).addTo(map)
@@ -50,7 +66,7 @@ const visualizacionMapa = {
     _.map(_.groupBy(allData, 'PROVINCENAME'), (producto, provincia) => {
       const productoItem = {
         "provincia": provincia,
-        "cantidad": provincia.length
+        "cantidad": producto.length
       }
 
       listContent += `<li><a class="dropdown-item" href="#" onclick="visualizacionMapa.cargarGrafico('${productoItem.provincia}')">${productoItem.provincia} (${productoItem.cantidad})</a></li>`
@@ -84,7 +100,9 @@ const visualizacionMapa = {
     })
 
     const totalProductos = _.map(_.groupBy(dataProvincia, 'SKU_NAME'), provincia => {
-      return _.sumBy(provincia, 'TOTALPAID')
+      return _.sumBy(provincia, i => {
+        return parseFloat(i.TOTALPAID)
+      })
     })
 
     Highcharts.chart('totalProductos', {
@@ -136,15 +154,19 @@ const visualizacionMapa = {
   cargarPie(nombreProvincia) {
 
     const dataProvincia = _.filter(allData, ['PROVINCENAME', nombreProvincia])
-
+    console.log(allData)
     const cantidadProductos = _.map(_.groupBy(dataProvincia, 'SKU_NAME'), (items, producto) => {
       return {
         name: producto,
-        y: _.sumBy(items, 'TOTALPAID'),
+        y: _.sumBy(items, i => {
+          return parseFloat(i.TOTALPAID)
+        }),
         sliced: true,
         selected: true
       }
     })
+
+    console.log(cantidadProductos)
 
     Highcharts.chart('totalProductosPie', {
       chart: {
@@ -198,10 +220,10 @@ const visualizacionMapa = {
         type: 'column'
       },
       title: {
-        text: 'Ventas de productos por mes'
+        text: 'Ventas de productos'
       },
       subtitle: {
-        text: ''
+        text: 'cantidad de productos vendidos por mes'
       },
       xAxis: {
         categories: (meses).sort(),

@@ -20,13 +20,9 @@ html, body {
 }
 
 .map-wrapper .map-filters{
-  position: absolute;
   width: 100%;
-  max-width: 320px;
-  overflow-y: scroll;
-  height: 55vh;
-  top: 0;
-  right: 0;
-  background-color: rgba(255, 255, 255, 0.712);
-  z-index: 999;
+}
+
+.map-wrapper .map-filters .product-list {
+  width: 100%;
 }
