@@ -4,6 +4,7 @@ let mbUrl = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
 let map = {}
 let layerControl = {}
 let allData = {}
+let allBank = {}
 const zoom = 8
 const center = [-12.002221182006943, -77.00519605326208]
 
@@ -15,6 +16,13 @@ const visualizacionMapa = {
 
     setTimeout(() => {
       visualizacionMapa.createListProductos()
+    }, 1500)
+  },
+  initBank() {
+    this.loadBank()
+    setTimeout(() => {
+      visualizacionMapa.createListJobs()
+      visualizacionMapa.createRangeAge()
     }, 1500)
   },
   renderMap() {
@@ -33,6 +41,18 @@ const visualizacionMapa = {
       if (xmlhttp.readyState == 4) {
         if(xmlhttp.status == 200) {
           allData = visualizacionMapa.parseData(xmlhttp.responseText)
+        }
+      }
+    }
+    xmlhttp.send(null)
+  },
+  loadBank() {
+    var xmlhttp = new XMLHttpRequest()
+    xmlhttp.open('GET', 'data/bank.json', true)
+    xmlhttp.onreadystatechange = () => {
+      if (xmlhttp.readyState == 4) {
+        if(xmlhttp.status == 200) {
+          allBank = JSON.parse(xmlhttp.responseText)
         }
       }
     }
@@ -75,6 +95,44 @@ const visualizacionMapa = {
     list.innerHTML = listContent
 
   },
+  createListJobs() {
+
+    let list  = document.querySelector('.jobs-list')
+
+    let listContent = ``
+
+    _.map(_.groupBy(allBank, 'job'), (items, job) => {
+      const productoItem = {
+        "job": job,
+        "cantidad": items.length
+      }
+
+//       <div class="form-check form-switch">
+//   <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" checked>
+//   <label class="form-check-label" for="flexSwitchCheckChecked">Checked switch checkbox input</label>
+// </div>
+
+      listContent += `<div class="form-check form-switch">`
+      listContent += `<input value="${productoItem.job}" class="form-check-input" type="checkbox" role="switch"><label class="form-check-label">${productoItem.job} (${productoItem.cantidad})</label>`
+      listContent += `</div>`
+    })
+
+    list.innerHTML = listContent
+
+  },
+  createRangeAge() {
+
+    const minAge = _.minBy(allBank, 'age')
+    const maxAge = _.maxBy(allBank, 'age')
+
+    let containerRange = document.querySelector('.range-age')
+
+    const contentRange = `<label for="customRange2" class="form-label">Filtrar por edad</label>
+    <input type="range" class="form-range" min="${minAge.age}" max="${maxAge.age}" id="rangeAge">`
+
+    containerRange.innerHTML = contentRange
+
+  },
   showProvinciaInfo(provincia,layer) {
     const $this = this
     layer.on({
@@ -85,6 +143,154 @@ const visualizacionMapa = {
 
       }
     })
+  },
+  cargarBank() {
+    const selected = _.map(Array.from(document.querySelectorAll('.form-check-input')), item => {
+      return {
+        checked: item.checked,
+        value: item.value
+      }
+    })
+
+    const seleccion_profesiones = _.filter(selected, item => {
+      if(item.checked)
+        return item.value
+    })
+
+    const profesions = _.uniq(_.map(seleccion_profesiones, 'value'))
+
+    const filteredData = _.filter(allBank, item => {
+      if(profesions.includes(item.job)) {
+        return item
+      }
+    })
+
+    const totalProfesions = _.map(_.groupBy(filteredData, 'job'), (items, job) => {
+      return _.sumBy(items, i => {
+        return parseFloat(i.balance)
+      })
+    })
+    
+    const avgProfesions = _.map(_.groupBy(filteredData, 'job'), (items, job) => {
+      return _.meanBy(items, i => {
+        return parseFloat(i.balance)
+      })
+    })
+
+
+    Highcharts.chart('bankOverview', {
+      chart: {
+          type: 'bar'
+      },
+      title: {
+          text: 'Deuda total entre profesionales'
+      },
+      subtitle: {
+          text: 'Source: <a href="https://en.wikipedia.org/wiki/World_population">Wikipedia.org</a>'
+      },
+      xAxis: {
+          categories: profesions,
+          title: {
+              text: null
+          }
+      },
+      yAxis: {
+          min: 0,
+          title: {
+              text: 'Population (millions)',
+              align: 'high'
+          },
+          labels: {
+              overflow: 'justify'
+          }
+      },
+      tooltip: {
+          valueSuffix: ' millions'
+      },
+      plotOptions: {
+          bar: {
+              dataLabels: {
+                  enabled: true
+              }
+          }
+      },
+      legend: {
+          layout: 'vertical',
+          align: 'right',
+          verticalAlign: 'top',
+          x: -40,
+          y: 80,
+          floating: true,
+          borderWidth: 1,
+          backgroundColor:
+              Highcharts.defaultOptions.legend.backgroundColor || '#FFFFFF',
+          shadow: true
+      },
+      credits: {
+          enabled: false
+      },
+      series: [{
+          name: 'Balance total',
+          data: totalProfesions
+      }]
+    });
+
+    Highcharts.chart('bankOverview2', {
+      chart: {
+          type: 'bar'
+      },
+      title: {
+          text: 'Deuda promedio entre profesionales'
+      },
+      subtitle: {
+          text: 'Source: <a href="https://en.wikipedia.org/wiki/World_population">Wikipedia.org</a>'
+      },
+      xAxis: {
+          categories: profesions,
+          title: {
+              text: null
+          }
+      },
+      yAxis: {
+          min: 0,
+          title: {
+              text: 'Population (millions)',
+              align: 'high'
+          },
+          labels: {
+              overflow: 'justify'
+          }
+      },
+      tooltip: {
+          valueSuffix: ' millions'
+      },
+      plotOptions: {
+          bar: {
+              dataLabels: {
+                  enabled: true
+              }
+          }
+      },
+      legend: {
+          layout: 'vertical',
+          align: 'right',
+          verticalAlign: 'top',
+          x: -40,
+          y: 80,
+          floating: true,
+          borderWidth: 1,
+          backgroundColor:
+              Highcharts.defaultOptions.legend.backgroundColor || '#FFFFFF',
+          shadow: true
+      },
+      credits: {
+          enabled: false
+      },
+      series: [ {
+          name: 'Balance promedio',
+          data: avgProfesions
+      }]
+    });
   },
   cargarGrafico(provincia) {
     visualizacionMapa.cargarBarras(provincia)
