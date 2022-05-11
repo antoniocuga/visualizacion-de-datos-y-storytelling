@@ -11,11 +11,11 @@ const center = [-12.002221182006943, -77.00519605326208]
 const visualizacionMapa = {
   init() {
     this.loadData()
-    // this.renderMap()
-    // this.loadProvincias()
+    this.renderMap()
 
     setTimeout(() => {
       visualizacionMapa.createListProductos()
+      this.loadProvincias()
     }, 1500)
   },
   initBank() {
@@ -75,7 +75,34 @@ const visualizacionMapa = {
     return result
   },
   loadProvincias() {
-    var jsonTest = new L.GeoJSON.AJAX(["data/provincias.geojson"],{onEachFeature:this.showProvinciaInfo}).addTo(map)
+    var jsonTest = new L.GeoJSON.AJAX(["data/provincias.geojson"],{onEachFeature:this.showProvinciaInfo, style: visualizacionMapa.styleProvincia}).addTo(map)
+  },
+  getColor(d) {
+    return d > 10000 ? '#800026' :
+           d > 1000  ? '#BD0026' :
+           d > 500  ? '#E31A1C' :
+           d > 100  ? '#FC4E2A' :
+           d > 50   ? '#FD8D3C' :
+           d > 20   ? '#FEB24C' :
+           d > 10   ? '#FED976' :
+                      'transparent';
+  },
+  styleProvincia(feature) {
+
+    const provinciaCount = _.filter(allData, item => {
+      if(item.PROVINCENAME == feature.properties.NOMBPROV) {
+        return item
+      }
+    })
+
+    return {
+        fillColor: visualizacionMapa.getColor(provinciaCount.length),
+        weight: 0.5,
+        opacity: 1,
+        color: 'white',
+        dashArray: '3',
+        fillOpacity: 0.7
+    };
   },
   createListProductos() {
 
@@ -112,8 +139,8 @@ const visualizacionMapa = {
 //   <label class="form-check-label" for="flexSwitchCheckChecked">Checked switch checkbox input</label>
 // </div>
 
-      listContent += `<div class="form-check form-switch">`
-      listContent += `<input value="${productoItem.job}" class="form-check-input" type="checkbox" role="switch"><label class="form-check-label">${productoItem.job} (${productoItem.cantidad})</label>`
+      listContent += `<div class="form-check">`
+      listContent += `<input value="${productoItem.job}" class="form-check-input" type="checkbox"><label class="form-check-label">${productoItem.job} (${productoItem.cantidad})</label>`
       listContent += `</div>`
     })
 
@@ -140,6 +167,7 @@ const visualizacionMapa = {
 
         visualizacionMapa.cargarBarras(provincia.properties.NOMBPROV)
         visualizacionMapa.cargarPie(provincia.properties.NOMBPROV)
+        visualizacionMapa.cargarHistogram(provincia.properties.NOMBPROV)
 
       }
     })
